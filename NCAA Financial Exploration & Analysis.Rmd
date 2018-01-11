@@ -1,0 +1,376 @@
+---
+title: "Technical Document"
+author: "Alex Kan, Cole Smith, Christian Taylor"
+date: "11/18/2017"
+output: html_document
+---
+Load dependencies and read in datasets for years 2011-2016
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+library(leaflet)
+library(ggmap)
+
+EADA2016 <- read_csv('EADA2016.csv')
+EADA2015 <- read_csv('EADA2015.csv')
+EADA2014 <- read_csv('EADA2014.csv')
+EADA2013 <- read_csv('EADA2013.csv')
+EADA2012 <- read_csv('EADA2012.csv')
+EADA2011 <- read_csv('EADA2011.csv')
+```
+
+
+Unite address elements into a single new column for addresses
+```{r}
+EADA2016 <- EADA2016 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+
+EADA2015 <- EADA2015 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+
+EADA2014 <- EADA2014 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+
+EADA2013 <- EADA2013 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+
+EADA2012 <- EADA2012 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+
+EADA2011 <- EADA2011 %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+```
+
+Select relevant data for calculating spending, revenue and profits from Baseball, Basketball, and Football from UNC, Duke and NC State
+```{r}
+EADA2016 <- EADA2016 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2016")
+
+EADA2015 <- EADA2015 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2015")
+
+EADA2014 <- EADA2014 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2014")
+
+EADA2013 <- EADA2013 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2013")
+
+EADA2012 <- EADA2012 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2012")
+
+EADA2011 <- EADA2011 %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Softball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football) %>%
+  mutate(unitid = "2011")
+```
+
+Unite all into one dataframe 
+```{r}
+DataAll <- rbind(EADA2016, EADA2015, EADA2014, EADA2013, EADA2012, EADA2011)
+names(DataAll)[names(DataAll) == 'unitid'] <- 'year'
+```
+
+Calculate relevant data for predicting expenses for Baseball, Basketball, and Football
+```{r}
+DataAll <- mutate(DataAll, PARTIC_TOTAL_Baseball = PARTIC_MEN_Baseball + PARTIC_WOMEN_Softball)
+DataAll <- mutate(DataAll, PARTIC_TOTAL_Bskball = PARTIC_MEN_Bskball + PARTIC_WOMEN_Bskball)
+DataAll <- mutate(DataAll, PARTIC_TOTAL_Football = PARTIC_MEN_Football)
+DataAll <- mutate(DataAll, TOTAL_EXP_PP_Bskball = TOTAL_OPEXP_MENWOMEN_Bskball / PARTIC_TOTAL_Bskball)
+DataAll <- mutate(DataAll, TOTAL_EXP_PP_Baseball = (TOTAL_OPEXP_MENWOMEN_Baseball + TOTAL_OPEXP_MENWOMEN_Softball) / (PARTIC_TOTAL_Baseball + PARTIC_WOMEN_Softball))
+DataAll <- mutate(DataAll, TOTAL_EXP_PP_Football = TOTAL_OPEXP_MENWOMEN_Football/ PARTIC_TOTAL_Football)
+DataAll <- mutate(DataAll, sector_cd = as.character(sector_cd))
+DataAll <- mutate(DataAll, GRAND_TOTAL_PROFIT = GRND_TOTAL_REVENUE - GRND_TOTAL_EXPENSE)
+```
+
+
+###Exploratory Analysis
+
+#Exploring relationship between Total Enrollment and Total Atheltic Profit given different years
+```{r}
+DataAll %>%
+  ggplot() +
+  geom_smooth(aes( x = EFTotalCount, y = GRAND_TOTAL_PROFIT, colour = year)) +
+  xlim(0,40000) +
+  ggtitle('Figure 1: Total School Enrollment to profit made by Athletic Dept, respect to year') +
+  labs(x = 'Total Enrollement', y = 'Total Profit')
+```
+
+```
+In Figure 1, we see that the relationship between the total number of enrolled students at the university has a logarithmic relationship. In addition to that, over the years, the total profit of each school has begun to decrease. 
+```
+
+#Exploring relationship between Total Enrollment and Total Atheltic Profit all years combined
+```{r}
+DataAll %>%
+  ggplot() +
+  geom_smooth(aes( x = EFTotalCount, y = GRND_TOTAL_EXPENSE)) +
+  xlim(0,40000) +
+  ggtitle('Figure 2: Total School Enrollment to expense by athletic dept') +
+  labs(x = 'Total Enrollement', y = 'Total Expense')
+```
+
+```
+In Figure 2, the combination of all the years' data, shows that the trend is similar than that of Figure 1. 
+```
+
+```{r}
+DataAll %>%
+  ggplot(aes(x = EFTotalCount) ) + 
+  geom_smooth(aes(y = TOTAL_EXP_PP_Baseball, colour = "Spending per Player Baseball")) +
+  geom_smooth(aes(y = TOTAL_EXP_PP_Bskball, colour = "Spending per Player Basketball")) +
+  geom_smooth(aes(y = TOTAL_EXP_PP_Football, colour = "Spending per Player Football")) +
+  ggtitle('Figure 3: Total School Enrollment to Amount of money spent per player') +
+  labs(x = 'Total Enrollement', y = 'Money Spent per Player') +
+  xlim(0,40000)
+```
+
+```
+The investigation takes a turn in Figure 3, when we no longer look at profit, but instead the general expenses for the three main sports watched in the South: baseball, basketball, and football. This plot uses the mutated data of the expense per player for each of these sports. From this plot, we can see that the money is spent from greatest to least: basketball, football and baseball. As the enrollment increases, the possibiliy that the classifaction of school as NCAA Division I-FBS, NCAA Division I-FCS, or NCAA Division II/III with football.  
+```
+
+```{r}
+DataAll %>%
+  filter(sector_cd == 1 | sector_cd == 2) %>%
+  ggplot(aes(sector_cd, GRND_TOTAL_EXPENSE)) +
+  geom_boxplot(outlier.shape = NA) +
+  ylim(0,15000000) +
+  ggtitle('Figure 4: Total Money Spent in Athletics Deparment, Public vs. Private') +
+  labs(x = 'Institution Type', y = 'Money Spent')
+```
+
+```
+To better understand the spending of the universities, the data was split into the institution type. We see that institution type 1, public, the average amount of money spent out of the university in athletics is around $3,000,000. Then, astonishingly, the maximum for public school education expense is around $14,000,000, while private is around $9,000,000. 
+```
+
+#Exploring relationship between Type of Institution and Total Atheltic Profit
+```{r}
+DataAll %>%
+  ggplot() +
+  geom_smooth(aes( x = ClassificationCode, y = GRND_TOTAL_EXPENSE)) +
+  ggtitle('Figure 5: Total expense given NCAA classification code') +
+  labs(x = 'Instiution Type', y = 'Total Money Spent')
+```
+
+```
+The data has a huge possibility of error because all Classification Codes above 16 hold the possibility of the athletic department being funded by a community college, independent or vocational school. So if we narrow it down to only NCAA Division I-III, NAIA, NJCAA and NCCAA institutions, there should be a stronger correlation.  
+```
+
+#Narrow Data to Division I, II, III of NCAA, NCCAA, NJCAA and NAIA
+
+Plot the total profit of a school vs it's classification code with a geom_smooth model. 
+```{r}
+DataAll %>%
+  ggplot() +
+  geom_smooth(aes( x = ClassificationCode, y = GRND_TOTAL_EXPENSE)) +
+  ggtitle('Figure 5: Total expense given NCAA classification code') +
+  labs(x = 'NCAA Classification Code', y = 'Total Profit')
+```
+
+Polynomial modeling 
+```{r}
+# Separate data into train and test sets 
+DataPred <- DataAll
+n <- dim(DataPred)[1]
+
+n_tr <- floor(n * .8)
+tr_indices <- sample(x=1:n, size=n_tr, replace=FALSE)
+
+train <- DataPred[tr_indices, ]
+test <- DataPred[-tr_indices, ]
+
+# Create polynomial model of total exxpenses based upon classification code, total student enrollment, and total amount of student aid.  
+
+poly_mod_test <- lm(GRND_TOTAL_REVENUE ~ (EFTotalCount)*(STUDENTAID_TOTAL)*(TOTAL_EXP_MENWOMEN_Football), train)
+summary(poly_mod_test)
+
+# Predict expenses for test data 
+
+pred_poly_test <- predict(poly_mod_test, newdata = test)
+
+# Add predictions to test data 
+test <- test %>%
+  mutate(expense_poly_test_pred = pred_poly_test)
+
+# resid_sq <- (test$GRND_TOTAL_EXPENSE-test$expense_poly_test_pred)^2
+# mse_tst = mean(resid_sq)
+# sqrt(mse_tst)
+#plot(poly_mod_test, which=1:2)
+```
+
+```
+For modeling purposes, we kept all of the data of all of the schools for Figure 6. The line in blue is the our train data, and the line in red is the test data for our prediction. The prediction incorporated the interactions between NCAA classification codes, total institution enrollment, total expense for football, and student aid disbursed to the student body. The prediction has an adjusted R-squared value of .94 and is able to predict most of the revenues of NCAA Division I-III and NAIA Division I-III schools. The outliers of vocational schools, community and independent colleges left room for error in all of our predictions for estimated expense. 
+```
+
+Plot of the prediced expenses for each classification code.
+```{r}
+  ggplot() +
+  geom_smooth(data = DataAll, aes( x = ClassificationCode, y = GRND_TOTAL_EXPENSE)) +
+  geom_smooth(data = test, aes(x = ClassificationCode, y = expense_poly_test_pred), colour = 'red') +
+  ggtitle('Figure 6: Expense Profit given NCAA classification code, actual(blue), pred(red)') +
+  labs(x = 'NCAA Classification Code', y = 'Total Expense')
+```
+
+###Mapping Data
+
+
+```{r}
+
+#Read in data
+df <- read_csv("AAData.csv")
+
+
+# Geocode addresses with (Commented out in order to prevent GoogleMaps API limit from being reached)
+
+# latlng <- df %>% 
+#      select(address) %>% 
+#      unlist(use.names = F) %>% 
+#      geocode() %>% 
+#      rename(lng = lon)
+#      
+# # Separately geocode for Washington State University (NA originally)
+# latlng[120, ] <- geocode("French Administration Building, Pullman, WA")
+#  
+# latlng <- latlng[c("lat", "lng")]
+# write.csv(latlng, file = "latlng")
+```
+
+Leaflet map which plots the locations of all the D1 schools, with clustering for nearby schools. Created in order to show the distribution of D1 schools in an interesting medium. Labels added for the school names. 
+```{r}
+latlng <- read_csv("latlng")
+
+df <- df %>%  
+    mutate(lat = latlng$lat, lng = latlng$lng)
+
+# Create leaflet map and add markeres with school names, add clustering
+clusteredMap <- df %>%
+    leaflet() %>%
+    addTiles() %>%
+    addMarkers(label = df$institution_name, popup = df$institution_name, clusterOptions = markerClusterOptions()) %>% 
+    setView(-98.585522, 39.8333333, zoom = 4) 
+
+clusteredMap
+```
+
+Leaflet map which plots the locations of all the D1 schools (without clustering). 
+
+```{r}
+# Create leaflet map and add markeres with school names
+unclusteredMap <- leaflet() %>%
+    addTiles() %>%
+    addMarkers(data = df, label = df$institution_name) %>%
+    setView(-98.585522, 39.8333333, zoom = 4)
+
+unclusteredMap
+```
+
+
+Exploratory Classification - Used to initially determine if classifying schools as Profitable/Not Profitable was feasible
+```{r}
+#Gathering EADA 2016 Data for Classification, define isProfitable if reveneus exceeded expenses
+ClassificationProfitable <- read_csv("EADA2016.csv") %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE) %>% 
+    mutate(GRAND_TOTAL_PROFIT = GRND_TOTAL_REVENUE - GRND_TOTAL_EXPENSE, isProfitable = (GRAND_TOTAL_PROFIT > 0))
+```
+
+
+Explore two possible ways by which to classify the data. The first classification relates the total recruiting expenditures to the head coach salaries of men's teams. 
+
+The second classification relates the number of males students at a university to the number of female students. 
+```{r}
+# ClassificationProfitable %>% 
+#     ggplot() + 
+#     geom_point(aes(x = ClassificationProfitable$EFTotalCount, y = ClassificationProfitable$HDCOACH_SALARY_COED, colour = as.factor(ClassificationProfitable$isProfitable))) +
+#     theme(panel.background = element_blank()) 
+#  
+# ClassificationProfitable %>% 
+#     ggplot() + 
+#     geom_point(aes(x = ClassificationProfitable$EFTotalCount, y = ClassificationProfitable$STUDENTAID_TOTAL, colour = as.factor(ClassificationProfitable$isProfitable))) + theme(panel.background = element_blank()) 
+# 
+# ClassificationProfitable %>%
+#     ggplot() + 
+#     geom_point(aes(x = ClassificationProfitable$FTE_HDCOACH_MEN, y = ClassificationProfitable$ASCOACH_SAL_FTE_MEN, colour = as.factor(ClassificationProfitable$isProfitable))) + theme(panel.background = element_blank()) 
+#  
+#  
+# ClassificationProfitable %>%
+#     ggplot() + 
+#     geom_point(aes(x = ClassificationProfitable$NUM_HDCOACH_MEN + ClassificationProfitable$NUM_HDCOACH_WOMEN, y = ClassificationProfitable$HDCOACH_SAL_FTE_MEN + ClassificationProfitable$HDCOACH_SAL_FTE_WOMN, colour = as.factor(ClassificationProfitable$isProfitable))) + theme(panel.background = element_blank()) 
+
+ClassificationProfitable %>% 
+    ggplot() + 
+    geom_point(aes(x = ClassificationProfitable$RECRUITEXP_TOTAL, y = ClassificationProfitable$HDCOACH_SALARY_MEN, colour = as.factor(ClassificationProfitable$isProfitable))) + theme(panel.background = element_blank()) +
+     ggtitle("Classification Test 1 ") +
+    labs(x = 'Total Recruiting Expense', y ='Male Team Headcoach Salary')
+ 
+   
+ClassificationProfitable %>% 
+    ggplot() + 
+    geom_jitter(aes(x = ClassificationProfitable$EFMaleCount, y = ClassificationProfitable$EFFemaleCount, colour = as.factor(ClassificationProfitable$isProfitable))) + theme(panel.background = element_blank()) +
+    ggtitle("Classification Test 2 ") +
+    labs(x = 'Male Student Count', y ='Female Student Count')
+```
+
+
+Further Analysis
+
+Collecting only Division I Schools
+```{r}
+AcademicAthleticInitial <- read_csv('EADA2016.csv')
+AAData <- AcademicAthleticInitial
+AAData <- filter(AAData, ClassificationCode <= 3)
+```
+
+Variables Only Including Spending, Revenue, Profit
+```{r}
+AAData <- AAData %>%
+    unite(address, addr1_txt, city_txt, state_cd, zip_text, sep = ", ", remove = FALSE)
+```
+
+Selecting necessary variables for analysis
+```{r}
+AAData <- AAData %>%
+    select(unitid, institution_name, address, ClassificationCode, EFMaleCount, EFFemaleCount, EFTotalCount, sector_cd, STUDENTAID_TOTAL, RECRUITEXP_TOTAL, HDCOACH_SALARY_MEN, HDCOACH_SALARY_WOMEN, GRND_TOTAL_REVENUE, GRND_TOTAL_EXPENSE, PARTIC_MEN_Baseball, PARTIC_MEN_Bskball, PARTIC_MEN_Football, PARTIC_WOMEN_Softball, PARTIC_WOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Baseball, TOTAL_OPEXP_MENWOMEN_Bskball, TOTAL_OPEXP_MENWOMEN_Football, TOTAL_REV_MENWOMEN_Baseball, TOTAL_REV_MENWOMEN_Bskball, TOTAL_REV_MENWOMEN_Football, TOTAL_EXP_MENWOMEN_Baseball, TOTAL_EXP_MENWOMEN_Bskball, TOTAL_EXP_MENWOMEN_Football)
+```
+
+Minor Data Manipulation
+```{r}
+AAData <- mutate(AAData, GRAND_TOTAL_PROFIT = GRND_TOTAL_REVENUE - GRND_TOTAL_EXPENSE)
+AAData <- mutate(AAData, PARTIC_TOTAL_Baseball = PARTIC_MEN_Baseball + PARTIC_WOMEN_Softball)
+AAData <- mutate(AAData, PARTIC_TOTAL_Bskball = PARTIC_MEN_Bskball + PARTIC_WOMEN_Bskball)
+AAData <- mutate(AAData, PARTIC_TOTAL_Football = PARTIC_MEN_Football)
+
+AATest <- AAData
+```
+
+Creating a new dataset 'football' which contains only Classification Codes = 1
+```{r}
+football <- filter(AAData, ClassificationCode == 1)
+```
+
+Plots describing the profitability of D1 Schools, and just FBS schools. Creating plot of the amounts of profit by individual schools schools
+```{r}
+ggplot(AAData, aes(x = GRAND_TOTAL_PROFIT > 0, fill = GRAND_TOTAL_PROFIT )) +
+  geom_bar(show.legend = FALSE) +
+  scale_x_discrete(labels = c("FALSE" = "Not Profitable", "TRUE" = "Profitable")) +
+  ggtitle('Division 1 Schools Making a Profit') +
+  labs(x = 'Profitability', y = 'Count of Schools')
+
+ggplot(football, aes(x = GRAND_TOTAL_PROFIT > 0, fill = GRAND_TOTAL_PROFIT)) +
+  geom_bar(show.legend = FALSE) +
+  scale_x_discrete(labels = c("FALSE" = "Not Profitable", "TRUE" = "Profitable")) +
+  ggtitle('FBS Division 1 Schools Making a Profit') +
+  labs(x = 'Profitability', y = 'Count of Schools')
+
+profit_football <- filter(football, GRAND_TOTAL_PROFIT > 0)
+ggplot(profit_football, aes(GRAND_TOTAL_PROFIT)) +
+  geom_histogram(bins = 100) +
+  ggtitle('FBS Division 1 Schools Profits')+
+  labs(x = 'Amount of Profit', y = 'Count') +
+  scale_x_continuous(breaks = c(0e+07, 1e+07, 2e+07, 3e+07), label = c("$0", "$1,000,000", "$2,000,000", "$3,000,000"))
+  
+
+```
